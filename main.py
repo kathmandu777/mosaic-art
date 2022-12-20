@@ -58,7 +58,7 @@ def main(
     pop: bool,
     zoom: int,
 ):
-    THRESHOLD_IMAGES_NUM = 250
+    THRESHOLD_IMAGES_NUM = 2000
 
     # Mosaic Art Info
     print("\n===============================")
@@ -72,7 +72,7 @@ def main(
         : target_image.shape[1] // tile_size * tile_size,
     ]
     print(
-        f"Needed images: {target_image.shape[0] // tile_size} x {target_image.shape[1] // tile_size}"
+        f"Needed images: {target_image.shape[0] // tile_size} x {target_image.shape[1] // tile_size} = {target_image.shape[0] // tile_size * target_image.shape[1] // tile_size}"
     )
 
     print(
@@ -88,21 +88,27 @@ def main(
     print("Loading images...")
     print("===============================")
 
-    image_paths = set(
-        glob.glob(image_dir + "/**/*.jpg", recursive=True)
-        + glob.glob(image_dir + "/**/*.png", recursive=True)
-        + glob.glob(image_dir + "/**/*.JPG", recursive=True)
+    image_paths = list(
+        set(
+            glob.glob(image_dir + "/**/*.jpg", recursive=True)
+            + glob.glob(image_dir + "/**/*.png", recursive=True)
+            + glob.glob(image_dir + "/**/*.JPG", recursive=True)
+        )
     )
-    if os.path.isfile("image_paths.pkl"):
+    if os.path.isfile("image_paths.pkl") and os.path.isfile(
+        "image_represent_colors.pkl"
+    ):
         with open("image_paths.pkl", "rb") as f:
             pickle_image_paths = pickle.load(f)
-        if pickle_image_paths == image_paths:
+        if set(pickle_image_paths) == set(image_paths):
+            with open("image_paths.pkl", "rb") as f:
+                image_paths = pickle.load(f)
             with open("image_represent_colors.pkl", "rb") as f:
                 image_represent_colors = pickle.load(f)
         else:
             image_represent_colors = []
             for image_path in tqdm(image_paths):
-                image = Image.open(image_path)
+                image = Image.open(image_path).convert("RGB")
                 image_represent_colors.append(
                     get_represent_color(
                         crop_center(image, min(image.size), min(image.size))
@@ -115,7 +121,7 @@ def main(
     else:
         image_represent_colors = []
         for image_path in tqdm(image_paths):
-            image = Image.open(image_path)
+            image = Image.open(image_path).convert("RGB")
             image_represent_colors.append(
                 get_represent_color(
                     crop_center(image, min(image.size), min(image.size))
@@ -133,7 +139,6 @@ def main(
     print("Creating mosaic...")
     print("===============================")
     original_image_represent_colors = image_represent_colors.copy()
-    image_paths = list(image_paths)
     original_image_paths = image_paths.copy()
 
     generated_image = np.zeros(
@@ -151,7 +156,7 @@ def main(
                 j * tile_size : (j + 1) * tile_size,
             ]
             _, index = tree.query(get_represent_color(cv2pil(target_tile)))
-            image = Image.open(image_paths[index])
+            image = Image.open(image_paths[index]).convert("RGB")
             generated_image[
                 i * tile_size * zoom : (i + 1) * tile_size * zoom,
                 j * tile_size * zoom : (j + 1) * tile_size * zoom,
