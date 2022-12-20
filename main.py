@@ -169,17 +169,17 @@ def main(
     print("\n===============================")
     print("Saving image...")
     print("===============================")
-    cv2.imwrite("result_orig.jpg", generated_image)
-    for i in range(1, 9):
+    cv2.imwrite("result_100percent.jpg", generated_image)
+    for i in range(1, 10):
         ratio = i / 10
-        generated_image = cv2.addWeighted(
+        image = cv2.addWeighted(
             generated_image,
             ratio,
             cv2.resize(target_image, generated_image.shape[:2][::-1]),
             1 - ratio,
             0,
         )
-        cv2.imwrite(f"result_{1*10}percent.jpg", generated_image)
+        cv2.imwrite(f"result_{i*10}percent.jpg", image)
 
 
 if __name__ == "__main__":
