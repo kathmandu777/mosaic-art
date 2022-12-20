@@ -60,6 +60,12 @@ def main(
 ):
     THRESHOLD_IMAGES_NUM = 2000
 
+    # Check whether already exist result images
+    if os.path.isfile("result_100percent.jpg"):
+        confirm = input("Result images already exist. Overwrite? [y/N]: ")
+        if confirm != "y":
+            exit()
+
     # Mosaic Art Info
     print("\n===============================")
     print("Mosaic Art Info")
